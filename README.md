@@ -38,7 +38,7 @@ npm test
 
 ## Versioning
 
-[Semantic Versioning](http://semver.org/). For the versions available, see the [tags on this repository](https://github.com/pedromartelleto/mathweb/tags).
+See [Semantic Versioning](http://semver.org/). For the versions available, see the [tags on this repository](https://github.com/pedromartelleto/mathweb/tags).
 
 ## License
 
