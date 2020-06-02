@@ -1,3 +1,16 @@
+.math-field {
+  outline: none !important;
+  border: none !important;
+  padding: 5px !important;
+  font-size: 30px !important;
+  margin-top: 10px !important;
+}
+
+.math-field:focus {
+  outline: none !important;
+  border: none !important;
+}
+
 .App {
   text-align: center;
 }
