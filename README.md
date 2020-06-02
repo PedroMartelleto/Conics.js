@@ -32,16 +32,14 @@ End with an example of getting some data out of the system or using it for a lit
 
 ## Running the tests
 
-> npm test
-
-## Deployment
-
-> npm run deploy
+```
+npm test
+```
 
 ## Versioning
 
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/pedromartelleto/mathweb/tags).
+[Semantic Versioning](http://semver.org/). For the versions available, see the [tags on this repository](https://github.com/pedromartelleto/mathweb/tags).
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+This project is licensed under GPLv3 - see the [LICENSE.md](LICENSE.md) file for details.
