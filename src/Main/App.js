@@ -2,7 +2,7 @@ import React from 'react';
 import './App.css';
 import { EditableMathField, addStyles } from 'react-mathquill';
 import Plot from "react-plotly.js";
-import SurfaceData3D from './SurfaceData3D';
+import SurfaceData3D from '../Graphs/SurfaceData3D';
 import { parser } from "mathjs"
 
 addStyles();
