@@ -5,7 +5,7 @@ export default class Vector {
     // MARK: Constructors
 
     /**
-     * Basis = undefined is conventioned to be the ortonormal basis.
+     * Basis = undefined is conventioned to be the orthonormal basis.
      * @param {Matrix} matrix 
      * @param {Basis | undefined} basis 
      */
