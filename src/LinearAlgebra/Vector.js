@@ -5,6 +5,20 @@ export default class Vector {
     // MARK: Constructors
 
     /**
+     * x, y are the components of the vector at the given basis.
+     * Basis = undefined is conventioned to be the orthonormal basis.
+     * @param {number} x
+     * @param {number} y 
+     * @param {Basis | undefined} basis 
+     */
+    static Vec2(x, y, basis = undefined) {
+        const mat = new Matrix(2, 1);
+        mat.members[0] = x;
+        mat.members[1] = y;
+        return new Vector(mat, basis);
+    }
+
+    /**
      * Basis = undefined is conventioned to be the orthonormal basis.
      * @param {Matrix} matrix 
      * @param {Basis | undefined} basis 
