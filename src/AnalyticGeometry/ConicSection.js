@@ -1,9 +1,23 @@
-import Vector from "../LinearAlgebra/Vector";
-import Quadratic from "../Polynomial/Quadratic";
 import Trigonometry from "../Trigonometry";
 import { lusolve } from "mathjs";
+import Polynomial from "../Polynomial";
+import Line from "./Line";
+import Ellipse from "./Ellipse";
+import Circle from "./Circle";
+import Hyperbole from "./Hyperbole";
+import Parabola from "./Parabola";
+import Quadratic from "../Polynomial/Quadratic";
 
 export default class ConicSection {
+    static Types = Object.freeze({
+        emptySet: 'emptySet',
+        lines: 'lines',
+        circle: 'circle',
+        ellipse: 'ellipse',
+        hyperbole: 'hyperbole',
+        parabola: 'parabola'
+    });
+
     /**
      * Safely creates a ConicSection from a Polynomial.
      * @param {Polynomial} poly 
@@ -42,20 +56,11 @@ export default class ConicSection {
         this.e = e;
         this.f = f;
         this.coordinateSystem = coordinateSystem;
+        this.type = undefined;
     }
 
-    /**
-     * Expresses g(x, y) = 0 as f: R -> R^2, f(x) = y. Then, returns f(x).
-     * @param {number} x
-     * @returns {Vector}
-     */
-    yFromX(x) {
-        const qA = 0;
-        const qB = 0;
-        const qC = 0;
-
-        const roots = new Quadratic(qA, qB, qC).roots();
-        return Vector.Vec2(roots[0], roots[1]);
+    yAsFunctionOfX(x) {
+        return new Quadratic(this.c, this.e + this.b * x, this.d * x + this.a * x**2 + this.f).roots();
     }
 
     g(x, y) {
@@ -77,6 +82,8 @@ export default class ConicSection {
 
             this.translate(h, k);
         } catch (e) {
+            // This conic has no center => It is a parabola
+            this.type = ConicSection.Types.parabola;
             return;
         }
 
@@ -92,6 +99,12 @@ export default class ConicSection {
         this.rotate(theta);
 
         // TODO: this.coordinateSystem.rotate(...);
+    }
+
+    toPolynomial() {
+        return new Polynomial({
+            'x^2': this.a, 'xy': this.b, 'y^2': this.c, 'x': this.d, 'y': this.e
+        }, this.f);
     }
 
     /**
@@ -131,28 +144,65 @@ export default class ConicSection {
         this.f = newF;
     }
 
-    identify() {
-
+    isEmptySet() {
+        const roots = this.yAsFunctionOfX(0);
+        return roots[0] === 'imaginary' && roots[1] === 'imaginary';
     }
 
-    focus() {
+    identifyType() {
+        this.simplify();
 
+        if (!!this.type) {
+            return;
+        }
+
+        if (this.isEmptySet()) {
+            this.type = ConicSection.Types.emptySet;
+            return;
+        }
+
+        if (this.a !== 0 && this.c !== 0 && this.b === 0 && this.d === 0 && this.e === 0 && this.f === 0) {
+            this.type = ConicSection.Types.lines;
+            return;
+        }
+
+        if ((this.a > 0 && this.c < 0) || (this.a < 0 && this.c > 0)) {
+            this.type = ConicSection.Types.hyperbole;
+            return;
+        }
+
+        if (this.a !== 0 && this.c === this.a) {
+            this.type = ConicSection.Types.circle;
+            return;
+        }
+
+        if (this.a !== 0 && this.c !== 0 && this.c !== this.a) {
+            this.type = ConicSection.Types.ellipse;
+            return;
+        }
+
+        this.type = ConicSection.Types.lines;
     }
 
-    center() {
+    createIdentifiedObject() {
+        this.identifyType();
 
-    }
-
-    vertex() {
-
-    }
-
-    asymptotes() {
-
-    }
-
-    axis() {
-
+        switch (this.type) {
+            case 'emptySet':
+                return undefined;
+            case 'lines':
+                return Line.fromConicSection(this);
+            case 'circle':
+                return Circle.fromConicSection(this);
+            case 'ellipse':
+                return Ellipse.fromConicSection(this);
+            case 'hyperbole':
+                return Hyperbole.fromConicSection(this);
+            case 'parabola':
+                return Parabola.fromConicSection(this);
+            default:
+                return undefined;
+        }
     }
 
     /**

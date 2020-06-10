@@ -1,16 +1,24 @@
 export default class Quadratic {
+    // Finds x0 and k such that ax^2 + bx + c = a(x - x0)^2 + k
+
+    static completeTheSquare(a, b, c) {
+        const x0 = - b / (2 * a);
+        const k = c - a * (x0**2);
+
+        return { x0, k };
+    }
+
     constructor(a, b, c) {
         this.a = a;
         this.b = b;
         this.c = c;
     }
-    
+
     roots() {
         const delta = this.b**2 - 4*this.a*this.c;
 
         if (delta < 0) {
-            console.warn("Imaginary roots are currently not supported.");
-            return [ 0, 0 ];
+            return [ 'imaginary', 'imaginary' ];
         }
 
         const deltaRoot = Math.sqrt(delta);

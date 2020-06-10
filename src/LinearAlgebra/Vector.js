@@ -27,6 +27,14 @@ export default class Vector {
         this.basis = basis;
     }
 
+    /**
+     * Returns this + other
+     * @param {Vector} other 
+     */
+    add(other) {
+        return new Vector(this.matrix.add(other.matrix), this.basis);
+    }
+
 
     // MARK: Cloning
     
@@ -34,23 +42,23 @@ export default class Vector {
      * Clones this.
      */
     clone() {
-        return new Vector(this.components.slice(0), this.basis);
+        return new Vector(this.matrix.clone(), this.basis);
     }
 
 
     // MARK: Getters and Setters
 
-    get x() { return this.components[0]; }
-    set x(newValue) { this.components[0] = newValue; }
+    get x() { return this.matrix.members[0]; }
+    set x(newValue) { this.matrix.members[0] = newValue; }
 
-    get y() { return this.components[1]; }
-    set y(newValue) { this.components[1] = newValue; }
+    get y() { return this.matrix.members[1]; }
+    set y(newValue) { this.matrix.members[1] = newValue; }
 
-    get z() { return this.components[2]; }
-    set w(newValue) { this.components[3] = newValue; }
+    get z() { return this.matrix.members[2]; }
+    set z(newValue) { this.matrix.members[2] = newValue; }
 
-    get w() { return this.components[3]; }
-    set z(newValue) { this.components[2] = newValue; }
+    get w() { return this.matrix.members[3]; }
+    set w(newValue) { this.matrix.members[3] = newValue; }
 
 
     // MARK: toString

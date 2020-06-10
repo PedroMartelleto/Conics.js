@@ -1,3 +1,27 @@
+function monomialString(coef, name, hasPrevious) {
+	let rounded = Math.round(coef * 100) / 100;
+
+	if (rounded === 0) {
+		return '';
+	}
+
+	let prefix = '';
+	
+	if (hasPrevious && coef > 0) {
+		prefix = '+';
+	}
+
+	if (rounded === 1) {
+		rounded = '';
+	}
+
+	if (rounded === -1) {
+		rounded = '-';
+	}
+
+	return prefix + rounded + name;
+}
+
 export default class Polynomial {
     /**
      * Creates a polynomial from a mathjs expression tree.
@@ -46,105 +70,6 @@ export default class Polynomial {
 			coefficients[name] = value;
 		}
 
-		/*
-		Below is a better way to do this conversion, but the code still needs work.
-
-		function getParent(node, parentsList) {
-			return parentsList.find(n => {
-				let isParent = false;
-
-				n.forEach((nChild) => {
-					if (nChild.equals(node)) {
-						isParent = true;
-					}
-				})
-
-				return isParent;
-			});
-		}
-
-		const parentsList = [];
-
-		rootNode.traverse((node, path, parent) => {
-			switch (node.type) {
-				case 'OperatorNode':
-					parentsList.push(node);
-					break;
-				case 'ConstantNode':
-					// Handles constant terms
-					const parent = getParent(node, parentsList);
-
-					if (!parent || parent.op === '+') {
-						constant = node.value;
-					}
-
-					if (!!parent && parent.op === '-') {
-						constant = -node.value;
-					}
-					break;
-				case 'SymbolNode':
-					// Handles non-constant terms
-					
-					const parent = getParent(node, parentsList);
-
-					let isAtBottom = true;
-
-					if (!parent) {
-						coefficients[node.name] = 1;
-						break;
-					}
-
-					// Ensures we are at the bottom of the tree
-					parent.forEach(child => {
-						if (child.type === 'OperatorNode') {
-							isAtBottom = false;
-						}
-					})
-
-					if (!isAtBottom) {
-						break;
-					}
-
-					let coefficient = 1;
-					let symbolNames = [];
-
-					// Goes up the chain until we find addition or subtraction
-					loop: while (!!parent) {
-						if (parent.op === '*') {
-							if (child.type === 'ConstantNode') {
-								coefficient *= child.value;
-							} else if (child.type === 'SymbolNode') {
-								symbolNames.push(.name);
-							}
-						} else if (parent.op === '^') {
-							let pow = 2;
-							forEach
-
-							symbolNames.push(node.name + '^' + pow);
-						} else if (parent.op === '+') {
-							break loop;
-						} else if (parent.op === '-') {
-							coefficient *= -1;
-							break loop;
-						}
-
-						parent = getParent(parent, parentsList);
-					}
-
-					symbolNames.sort((a, b) => a.firstname.localeCompare(b.firstname));
-
-					let symbolName = '';
-
-					for (const symbol of symbolNames) {
-						symbolName += symbol;
-					}
-
-					coefficients[symbolName] = coefficient;
-					
-					break;
-			}
-		});*/
-
 		return new Polynomial(coefficients, constant);
     }
 
@@ -159,5 +84,26 @@ export default class Polynomial {
 		this.coefficients = coefficients;
 
 		this.constant = constant ?? 0;
-    }
+	}
+	
+	toString() {
+		const keys = Object.keys(this.coefficients).sort((a, b) => a.localeCompare(b));
+	
+		let str = '';
+		let isFirst = true;
+
+		for (const key of keys) {
+			const mono = monomialString(this.coefficients[key], key, !isFirst);
+			
+			if (isFirst) {
+				isFirst = mono.length <= 0;
+			}
+
+			str += mono;
+		}
+
+		str += monomialString(this.constant, '', !isFirst);
+
+		return str;
+	}
 }

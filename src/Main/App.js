@@ -1,7 +1,7 @@
 import React from 'react';
 import './App.css';
 import { EditableMathField, StaticMathField, addStyles } from 'react-mathquill';
-import { parse, simplify } from "mathjs"
+import { simplify } from "mathjs"
 import Polynomial from '../Polynomial';
 import ConicSection from '../AnalyticGeometry/ConicSection';
 
@@ -19,20 +19,24 @@ function latexToMathJS(latex) {
 		.replace(/\\right/g, "");
 }
 
-function monomialLatex(coef, name, hasPrevious) {
-	const rounded = Math.round(coef * 100) / 100;
-
-	if (rounded === 0) {
-		return '';
+function formatPoints(list) {
+	if (!list) {
+		return "";
 	}
 
-	let prefix = '';
-	
-	if (hasPrevious && coef > 0) {
-		prefix = '+';
+	let str = "";
+
+	for (let i = 0; i < list.length; ++i) {
+		if (!list[i]) {
+			return "";
+		}
+
+		str += list[i].toString() + "_{\\Sigma}";
+
+		if (i < list.length - 1) str += ", ";
 	}
 
-	return prefix + rounded + name;
+	return str;
 }
 
 export default class App extends React.Component {
@@ -40,49 +44,106 @@ export default class App extends React.Component {
 		super(props);
 
 		const startLatex = "4x^2-4xy+7y^2+12x+6y-9";
-		this.state = { latex: startLatex, outputLatex: this.simplifyLatex(startLatex) };
+
+		const { conic, foci, center, vertices, extra, sigmaCondition } = this.identifyConicFromLatex(startLatex);
+		
+		this.state = { latex: startLatex,
+					   outputLatex: conic.toPolynomial().toString(),
+					   conicType: conic.type,
+					   foci, center, vertices, extra, sigmaCondition };
 	}
 
-	simplifyLatex(latex) {
-		let rootNode = undefined;
-		let latexResult = latex;
+	identifyConicFromLatex(latex) {
+		let conic = undefined;
+
+		let foci, center, vertices, extra, sigmaCondition;
 
 		try {
 			const str = latexToMathJS(latex);
-			rootNode = parse(str);
-			simplify(rootNode);
+			const rootNode = simplify(str); // TODO: rationalize here would be better but... https://github.com/josdejong/mathjs/issues/1290
 			
 			const polynomial = Polynomial.fromNode(rootNode);
-			const conic = ConicSection.fromPolynomial(polynomial);
-			conic.simplify();
+			conic = ConicSection.fromPolynomial(polynomial);
 
-			latexResult = monomialLatex(conic.a, 'x^2', false) +
-						  monomialLatex(conic.b, 'xy', true) +
-						  monomialLatex(conic.c, 'y^2', true) +
-						  monomialLatex(conic.d, 'x', true) +
-						  monomialLatex(conic.e, 'y', true) +
-						  monomialLatex(conic.f, '', true);
+			const identified = conic.createIdentifiedObject();
+
+			switch (conic.type) {
+				case 'circle':
+					foci = identified.foci;
+					center = identified.center;
+					vertices = identified.vertices;
+					sigmaCondition = "F_1=(c,0), F_2=(-c,0)";
+					break;
+				case 'ellipse':
+					foci = identified.foci;
+					center = identified.center;
+					vertices = identified.vertices;
+					sigmaCondition = "F_1=(c,0), F_2=(-c,0)";
+					break;
+				case 'hyperbole':
+					foci = identified.focus;
+					center = identified.center;
+					vertices = identified.vertices;
+					extra = identified.asymptoteEquations;
+					sigmaCondition = "F_1=(c,0), F_2=(-c,0)";
+					break;
+				case 'parabola':
+					foci = [identified.focus];
+					vertices = [identified.vertex];
+					extra = identified.axisEquation;
+					sigmaCondition = "F=(p, 0)";
+					break;
+				default:
+					break;
+			}
 		}
 		catch (e) {
 			return latex;
 		}
 
-		return latexResult;
+		return { conic, foci, center, vertices, extra, sigmaCondition };
 	}
 
 	updateLatex = (field) => {
 		const latex = field.latex();
-		this.setState({ latex, outputLatex: this.simplifyLatex(latex) });
+
+		const { conic, foci, center, vertices, extra, sigmaCondition } = this.identifyConicFromLatex(latex);
+		
+		const str = !!conic ? conic.toPolynomial().toString() : latex;
+
+		this.setState({ latex,
+						outputLatex: str,
+						conicType: !!conic ? conic.type : 'undefined',
+						foci, center, vertices, extra, sigmaCondition });
 	}
 
 	render() {
 		return (
-			<div className="App">
+			<div className="App" style={{fontWeight: 600}}>
 				Input: <EditableMathField className="math-field" latex={this.state.latex} onChange={this.updateLatex}></EditableMathField>
+				<br />
+
+				<br />
+				<br />
+				Type: {this.state.conicType ?? ''}
 				<br />
 
 				Simplified: <StaticMathField className="math-field">{this.state.outputLatex}</StaticMathField>
 				<br />
+
+				Σ is chosen such that <StaticMathField className="math-field">{this.state.sigmaCondition}</StaticMathField>
+				<br />
+
+				Foci: <StaticMathField className="math-field">{ formatPoints(this.state.foci ?? []) }</StaticMathField>
+				<br />
+				
+				Center: <StaticMathField className="math-field">{ formatPoints([this.state.center]) }</StaticMathField>
+				<br />
+				
+				Vertices: <StaticMathField className="math-field">{ formatPoints(this.state.vertices ?? []) }</StaticMathField>
+				<br />
+
+				{ this.state.extra }
 			</div>
 		);
 	}
