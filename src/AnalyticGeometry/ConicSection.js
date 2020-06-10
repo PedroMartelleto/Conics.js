@@ -1,5 +1,6 @@
 import Vector from "../LinearAlgebra/Vector";
 import Quadratic from "../Polynomial/Quadratic";
+import Trigonometry from "../Trigonometry";
 import { lusolve } from "mathjs";
 
 export default class ConicSection {
@@ -48,7 +49,7 @@ export default class ConicSection {
      * @param {number} x
      * @returns {Vector}
      */
-    f(x) {
+    yFromX(x) {
         const qA = 0;
         const qB = 0;
         const qC = 0;
@@ -61,25 +62,44 @@ export default class ConicSection {
         return this.a * x**2 + this.b * x * y + this.c * y**2 + this.d * x + this.e * y + this.f;
     }
 
+    simplifyLinearTerms() {
+        if (this.d === 0 && this.e === 0) {
+            return;
+        }
+
+        const A = [[this.a, this.b/2], [this.b/2, this.c]];
+        const b = [-this.d/2, -this.e/2];
+
+        try {
+            const solution = lusolve(A, b);
+            const h = solution[0][0];
+            const k = solution[1][0];
+
+            this.translate(h, k);
+        } catch (e) {
+            return;
+        }
+
+        // TODO: this.coordinateSystem.translate(...);
+    }
+
+    simplifyMixedTerms() {
+        if (this.b === 0) {
+            return;
+        }
+        
+        const theta = Trigonometry.arccot((this.a - this.c) / this.b) / 2;
+        this.rotate(theta);
+
+        // TODO: this.coordinateSystem.rotate(...);
+    }
+
     /**
      * Eliminates, if possible, b, d and e by changing the coordinate system.
      */
     simplify() {
-        console.log(this);
-        const A = [[this.a, this.b/2], [this.b/2, this.c]];
-        const b = [-this.d/2, -this.e/2];
-        const solution = lusolve(A, b);
-
-        const h = solution[0][0];
-        const k = solution[1][0];
-
-        this.translate(h, k);
-        const theta = Math.atan(this.b / (this.a - this.c));
-        this.rotate(theta);// TODO: Fix rotation
-
-        // TODO: This
-        // this.coordinateSystem.translate(...);
-        // this.coordinateSystem.rotate(...);
+        this.simplifyLinearTerms();
+        this.simplifyMixedTerms();
     }
 
     translate(h, k) {
@@ -96,7 +116,7 @@ export default class ConicSection {
         const c = Math.cos(theta);
         const s = Math.sin(theta);
 
-        const newA = this.a * c**2 + this.b * s * c + this.c * s**2;
+        const newA = this.a * (c**2) + this.b * s * c + this.c * (s**2);
         const newB = (this.c - this.a) * Math.sin(2 * theta) + this.b * Math.cos(2 * theta);
         const newC = this.a * s**2 - this.b * s * c + this.c * c**2;
         const newD = this.d * c + this.e * s;
