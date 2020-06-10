@@ -1,5 +1,3 @@
-import Vector from "./Vector";
-
 export default class Basis {
     /**
      * Initializes a basis using the given vectors.
@@ -11,19 +9,11 @@ export default class Basis {
 
 
     // MARK: Cloning
-
-    /**
-     * Copies the given basis.
-     * @param {Matrix} other 
-     */
-    constructor(other) {
-        this.vectors = other.vectors.slice(0);
-    }
     
     /**
      * Clones this.
      */
     clone() {
-        return new Basis(this);
+        return new Basis(this.vectors.slice(0));
     }
 }

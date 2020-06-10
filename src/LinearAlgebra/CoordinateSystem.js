@@ -1,6 +1,3 @@
-import Basis from "./Basis";
-import Point from "./Point";
-
 export default class CoordinateSystem {
     /**
      * A coordinate system is given by a point and a basis.
@@ -16,18 +13,9 @@ export default class CoordinateSystem {
     // MARK: Cloning
 
     /**
-     * Copies the given basis.
-     * @param {CoordinateSystem} other 
-     */
-    constructor(other) {
-        this.origin = other.origin.clone();
-        this.basis = other.basis.clone();
-    }
-    
-    /**
      * Clones this.
      */
     clone() {
-        return new CoordinateSystem(this);
+        return new CoordinateSystem(this.origin.clone(), this.basis.clone());
     }
 }

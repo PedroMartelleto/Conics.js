@@ -1,9 +1,24 @@
-import CoordinateSystem from "../LinearAlgebra/CoordinateSystem";
 import Vector from "../LinearAlgebra/Vector";
-import Quadratic from "../Polynomials/Quadratic";
+import Quadratic from "../Polynomial/Quadratic";
 import { lusolve } from "mathjs";
 
-export default class Conic {
+export default class ConicSection {
+    /**
+     * Safely creates a ConicSection from a Polynomial.
+     * @param {Polynomial} poly 
+     * @param {CoordinateSystem} coordinateSystem
+     */
+    static fromPolynomial(poly, coordinateSystem) {
+        const a = poly.coefficients['x^2'] ?? 0;
+        const b = poly.coefficients['xy'] ?? 0;
+        const c = poly.coefficients['y^2'] ?? 0;
+        const d = poly.coefficients['x'] ?? 0;
+        const e = poly.coefficients['y'] ?? 0;
+        const f = poly.constant ?? 0;
+
+        return new ConicSection(a, b, c, d, e, f, coordinateSystem);
+    }
+
     /**
      * The coefficients represent the equation below:
      *     ax^2 + bxy + cy^2 + dx + ey + f = 0.
@@ -33,7 +48,7 @@ export default class Conic {
      * @param {number} x
      * @returns {Vector}
      */
-    eval(x) {
+    f(x) {
         const qA = 0;
         const qB = 0;
         const qC = 0;
@@ -42,7 +57,7 @@ export default class Conic {
         return Vector.Vec2(roots[0], roots[1]);
     }
 
-    eval(x, y) {
+    g(x, y) {
         return this.a * x**2 + this.b * x * y + this.c * y**2 + this.d * x + this.e * y + this.f;
     }
 
@@ -50,6 +65,7 @@ export default class Conic {
      * Eliminates, if possible, b, d and e by changing the coordinate system.
      */
     simplify() {
+        console.log(this);
         const A = [[this.a, this.b/2], [this.b/2, this.c]];
         const b = [-this.d/2, -this.e/2];
         const solution = lusolve(A, b);
@@ -58,10 +74,8 @@ export default class Conic {
         const k = solution[1][0];
 
         this.translate(h, k);
-        
         const theta = Math.atan(this.b / (this.a - this.c));
-
-        this.rotate(theta);
+        this.rotate(theta);// TODO: Fix rotation
 
         // TODO: This
         // this.coordinateSystem.translate(...);
@@ -71,7 +85,7 @@ export default class Conic {
     translate(h, k) {
         const d = 2 * this.a * h + this.b * k + this.d;
         const e = 2 * this.c * k + this.b * h + this.e;
-        const f = this.eval(h, k);
+        const f = this.g(h, k);
 
         this.d = d;
         this.e = e;
@@ -82,19 +96,19 @@ export default class Conic {
         const c = Math.cos(theta);
         const s = Math.sin(theta);
 
-        const a = this.a * c**2 + this.b * s * c + this.c * s**2;
-        const b = (this.c - this.a) * Math.sin(2 * theta) + this.b * Math.cos(2 * theta);
-        const c = this.a * s**2 - this.b * s * c * this.c * c**2;
-        const d = this.d * c + this.e * s;
-        const e = -this.d * s + this.e * c;
-        const f = this.f;
+        const newA = this.a * c**2 + this.b * s * c + this.c * s**2;
+        const newB = (this.c - this.a) * Math.sin(2 * theta) + this.b * Math.cos(2 * theta);
+        const newC = this.a * s**2 - this.b * s * c + this.c * c**2;
+        const newD = this.d * c + this.e * s;
+        const newE = -this.d * s + this.e * c;
+        const newF = this.f;
 
-        this.a = a;
-        this.b = b;
-        this.c = c;
-        this.d = d;
-        this.e = e;
-        this.f = f;
+        this.a = newA;
+        this.b = newB;
+        this.c = newC;
+        this.d = newD;
+        this.e = newE;
+        this.f = newF;
     }
 
     identify() {
@@ -148,25 +162,11 @@ export default class Conic {
 
 
     // MARK: Cloning
-
-    /**
-     * Copies the given basis.
-     * @param {ConicSection} other 
-     */
-    constructor(other) {
-        this.a = other.a;
-        this.b = other.b;
-        this.c = other.c;
-        this.d = other.d;
-        this.e = other.e;
-        this.f = other.f;
-        this.coordinateSystem = other.coordinateSystem;
-    }
     
     /**
      * Clones this.
      */
     clone() {
-        return new Conic(this);
+        return new ConicSection(this.a, this.b, this.c, this.d, this.e, this.f, this.coordinateSystem);
     }
 }

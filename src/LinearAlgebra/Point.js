@@ -1,6 +1,3 @@
-import CoordinateSystem from "./CoordinateSystem";
-import Vector from "./Vector";
-
 export default class Point {
     /**
      * A point is a vector with an origin.
@@ -18,18 +15,9 @@ export default class Point {
     // MARK: Cloning
 
     /**
-     * Copies the given point.
-     * @param {Point} other 
-     */
-    constructor(other) {
-        this.vector = other.vector.clone();
-        this.coordinateSystem = other.coordinateSystem;
-    }
-    
-    /**
      * Clones this.
      */
     clone() {
-        return new Point(this);
+        return new Point(this.vector.clone(), this.coordinateSystem);
     }
 }

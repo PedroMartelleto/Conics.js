@@ -3,30 +3,21 @@ export default class Matrix {
      * Initializes a NxM matrix.
      * @param {number} rowCount
      * @param {number} colCount 
+     * @param {Float64Array} members
      */
-    constructor(rowCount, colCount) {
+    constructor(rowCount, colCount, members = undefined) {
         this.rowCount = rowCount;
         this.colCount = colCount;
-        this.members = new Float64Array(rowCount * colCount);
+        this.members = members ?? new Float64Array(rowCount * colCount);
     }
 
 
     // MARK: Cloning
-
-    /**
-     * Copies the given matrix.
-     * @param {Matrix} other 
-     */
-    constructor(other) {
-        this.rowCount = other.rowCount;
-        this.colCount = other.colCount;
-        this.members = other.members.slice(0);
-    }
     
     /**
      * Clones this.
      */
     clone() {
-        return new Matrix(this);
+        return new Matrix(this.rowCount, this.colCount, this.members.slice(0));
     }
 }

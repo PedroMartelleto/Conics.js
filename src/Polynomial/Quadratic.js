@@ -6,7 +6,7 @@ export default class Quadratic {
     }
     
     roots() {
-        const delta = b**2 - 4*a*c;
+        const delta = this.b**2 - 4*this.a*this.c;
 
         if (delta < 0) {
             console.warn("Imaginary roots are currently not supported.");
@@ -15,8 +15,8 @@ export default class Quadratic {
 
         const deltaRoot = Math.sqrt(delta);
         
-        var x1 = (-b + deltaRoot) / (2*a);
-        var x2 = (-b - deltaRoot) / (2*a);
+        var x1 = (-this.b + deltaRoot) / (2*this.a);
+        var x2 = (-this.b - deltaRoot) / (2*this.a);
 
         return [ x1, x2 ];
     }
