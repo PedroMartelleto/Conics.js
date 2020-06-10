@@ -1,4 +1,4 @@
-# mathweb
+# simath.js
 
 A tool to help visualize and solve mathematical problems.
 
@@ -13,7 +13,7 @@ A tool to help visualize and solve mathematical problems.
 Clone the repository
 
 ```
-git clone https://github.com/pedromartelleto/mathweb.git
+git clone https://github.com/pedromartelleto/simath.js.git
 ```
 
 Install dependencies
