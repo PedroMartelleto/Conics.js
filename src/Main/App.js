@@ -64,6 +64,7 @@ export default class App extends React.Component {
 			
 			const polynomial = Polynomial.fromNode(rootNode);
 			conic = ConicSection.fromPolynomial(polynomial);
+			console.log(JSON.stringify(conic));
 
 			const identified = conic.createIdentifiedObject();
 

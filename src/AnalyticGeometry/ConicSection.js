@@ -1,5 +1,5 @@
 import Trigonometry from "../Trigonometry";
-import { lusolve } from "mathjs";
+import { lusolve, det } from "mathjs";
 import Polynomial from "../Polynomial";
 import Line from "./Line";
 import Ellipse from "./Ellipse";
@@ -7,6 +7,14 @@ import Circle from "./Circle";
 import Hyperbole from "./Hyperbole";
 import Parabola from "./Parabola";
 import Quadratic from "../Polynomial/Quadratic";
+
+function safeNumber(x) {
+    if (Number.isFinite(x)) {
+        return x;
+    }
+
+    return 0;
+}
 
 export default class ConicSection {
     static Types = Object.freeze({
@@ -24,12 +32,12 @@ export default class ConicSection {
      * @param {CoordinateSystem} coordinateSystem
      */
     static fromPolynomial(poly, coordinateSystem) {
-        const a = poly.coefficients['x^2'] ?? 0;
-        const b = poly.coefficients['xy'] ?? 0;
-        const c = poly.coefficients['y^2'] ?? 0;
-        const d = poly.coefficients['x'] ?? 0;
-        const e = poly.coefficients['y'] ?? 0;
-        const f = poly.constant ?? 0;
+        const a = safeNumber(poly.coefficients['x^2']);
+        const b = safeNumber(poly.coefficients['xy']);
+        const c = safeNumber(poly.coefficients['y^2']);
+        const d = safeNumber(poly.coefficients['x']);
+        const e = safeNumber(poly.coefficients['y']);
+        const f = safeNumber(poly.constant);
 
         return new ConicSection(a, b, c, d, e, f, coordinateSystem);
     }
@@ -74,6 +82,27 @@ export default class ConicSection {
 
         const A = [[this.a, this.b/2], [this.b/2, this.c]];
         const b = [-this.d/2, -this.e/2];
+
+        if (det(A) === 0) {
+            // Zero or infinite solutions. Either way lusolve will fail since the matrix is not invertible.
+        
+            const ratio = this.a / (this.b/2);
+
+            if (Number.isFinite(ratio) && (this.b/2)/this.c === ratio && this.d/this.e === ratio) {
+                console.log("[ConicSection simplifyLinearTerms] Found infinite translations");
+                // If there are infinite solutions, both equations are equivalent. This means
+                // that the coefficients have the same "ratio"
+
+                // So, to calculate h and k, simply choose any h. Lets say h = 0.
+                // Then k = -e/(2c)
+
+                this.translate(0, -this.e/(2*this.c));
+            } else {
+                console.log("[ConicSection simplifyLinearTerms] Found no possible translations");
+            }
+            
+            return;
+        }
 
         try {
             const solution = lusolve(A, b);

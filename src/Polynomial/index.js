@@ -41,14 +41,17 @@ export default class Polynomial {
 			for (let i = 0; i < negs.length; ++i) {
 				// Removes spaces and * symbol.
 				// Also determines if the term is negative by using the index i.
-				terms.push({ text: negs[i].replace(/\s/g, "").replace(/\*/g, ""), isNegative: i > 0 });
+				terms.push({ text: negs[i].replace(/\s/g, "")
+										  .replace(/\*/g, "")
+										  .replace(/\(/g, "")
+										  .replace(/\)/g, ""), isNegative: i > 0 });
 			}
 		}
 
 		// For loops through terms
-		for (const term of terms) {
+		for (let term of terms) {
 			let value = 1;
-			
+
 			// If the entire string is simply a number, we have a constant term
 			if (!isNaN(term.text)) {
 				constant = parseFloat(term.text) * (term.isNegative ? -1 : 1);
@@ -69,7 +72,6 @@ export default class Polynomial {
 
 			coefficients[name] = value;
 		}
-
 		return new Polynomial(coefficients, constant);
     }
 
