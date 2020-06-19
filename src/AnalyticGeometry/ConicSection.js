@@ -7,6 +7,7 @@ import Circle from "./Circle";
 import Hyperbole from "./Hyperbole";
 import Parabola from "./Parabola";
 import Quadratic from "../Polynomial/Quadratic";
+import Utils from "../Utils"
 
 function safeNumber(x) {
     if (Number.isFinite(x)) {
@@ -19,6 +20,7 @@ function safeNumber(x) {
 export default class ConicSection {
     static Types = Object.freeze({
         emptySet: 'emptySet',
+        point: 'point',
         lines: 'lines',
         circle: 'circle',
         ellipse: 'ellipse',
@@ -67,8 +69,8 @@ export default class ConicSection {
         this.type = undefined;
     }
 
-    yAsFunctionOfX(x) {
-        return new Quadratic(this.c, this.e + this.b * x, this.d * x + this.a * x**2 + this.f).roots();
+    asQuadraticFromFixedX(x) {
+        return new Quadratic(this.c, this.e + this.b * x, this.d * x + this.a * x**2 + this.f);
     }
 
     g(x, y) {
@@ -76,19 +78,19 @@ export default class ConicSection {
     }
 
     simplifyLinearTerms() {
-        if (this.d === 0 && this.e === 0) {
+        if (Utils.doubleEquals(this.d, 0) && Utils.doubleEquals(this.e, 0)) {
             return;
         }
 
         const A = [[this.a, this.b/2], [this.b/2, this.c]];
         const b = [-this.d/2, -this.e/2];
 
-        if (det(A) === 0) {
+        if (Utils.doubleEquals(det(A), 0)) {
             // Zero or infinite solutions. Either way lusolve will fail since the matrix is not invertible.
         
             const ratio = this.a / (this.b/2);
 
-            if (Number.isFinite(ratio) && (this.b/2)/this.c === ratio && this.d/this.e === ratio) {
+            if (Number.isFinite(ratio) && Utils.doubleEquals((this.b/2)/this.c, ratio) && Utils.doubleEquals(this.d/this.e, ratio)) {
                 console.log("[ConicSection simplifyLinearTerms] Found infinite translations");
                 // If there are infinite solutions, both equations are equivalent. This means
                 // that the coefficients have the same "ratio"
@@ -97,30 +99,29 @@ export default class ConicSection {
                 // Then k = -e/(2c)
 
                 this.translate(0, -this.e/(2*this.c));
+
+                // This conic has infinite centers => we have two parallel lines or two identical lines
+                this.type = ConicSection.Types.lines;
             } else {
                 console.log("[ConicSection simplifyLinearTerms] Found no possible translations");
+                // This conic has no center => we have a parabola
+                this.type = ConicSection.Types.parabola;
             }
             
             return;
         }
 
-        try {
-            const solution = lusolve(A, b);
-            const h = solution[0][0];
-            const k = solution[1][0];
+        const solution = lusolve(A, b);
+        const h = solution[0][0];
+        const k = solution[1][0];
 
-            this.translate(h, k);
-        } catch (e) {
-            // This conic has no center => It is a parabola
-            this.type = ConicSection.Types.parabola;
-            return;
-        }
+        this.translate(h, k);
 
         // TODO: this.coordinateSystem.translate(...);
     }
 
     simplifyMixedTerms() {
-        if (this.b === 0) {
+        if (Utils.doubleEquals(this.b, 0)) {
             return;
         }
         
@@ -173,9 +174,51 @@ export default class ConicSection {
         this.f = newF;
     }
 
-    isEmptySet() {
-        const roots = this.yAsFunctionOfX(0);
-        return roots[0] === 'imaginary' && roots[1] === 'imaginary';
+    /**
+     * Returns 'one' if there is only one solution, 'zero' if there are no solutions or 'infinite' if there are infinite solutions.
+     */
+    numberOfSolutionsString() {
+        // We rewrite the conic as a quadratic (cy^2 + (e + bx)y + dx + ax^2 + f = 0) (*).
+        // Our discriminant is a function of x.
+        // So we need to check if that function is positive or zero for some x to
+        // determine if our system has any solution.
+
+        // Discriminant of the discriminant of (*).
+        const a = this.b**2 - 4 * this.a * this.c;
+        const b = 2 * this.b * this.e - 4 * this.c * this.d;
+        const c = this.e**2 - 4 * this.c * this.f;
+
+        // If a is 0...
+        if (Utils.doubleEquals(a, 0)) {
+            if (Utils.doubleEquals(b, 0)) {
+                if (c > 0) {
+                    return 'infinite';
+                } else if (Utils.doubleEquals(c, 0)) {
+                    return 'one';
+                } else { // c < 0
+                    return 'zero';
+                }
+            } else {
+                return 'infinite';
+            }
+        }
+
+        if (a > 0) {
+            return 'infinite';
+        }
+
+        const quadratic = new Quadratic(a, b, c);
+        const discriminant = quadratic.discriminant();
+        
+        // At this point, we know a < 0
+
+        if (Utils.doubleEquals(discriminant, 0)) {
+            return 'one';
+        } else if (discriminant > 0) {
+            return 'infinite';
+        } else { // discriminant < 0
+            return 'zero';
+        }
     }
 
     identifyType() {
@@ -185,12 +228,23 @@ export default class ConicSection {
             return;
         }
 
-        if (this.isEmptySet()) {
+        const solutionsString = this.numberOfSolutionsString();
+
+        if (solutionsString === 'one') {
+            this.type = ConicSection.Types.point;
+            return;
+        }
+
+        if (solutionsString === 'zero') {
             this.type = ConicSection.Types.emptySet;
             return;
         }
 
-        if (this.a !== 0 && this.c !== 0 && this.b === 0 && this.d === 0 && this.e === 0 && this.f === 0) {
+        // Else, there are infinite solutions, so more checks need to be made
+
+        if (!Utils.doubleEquals(this.a, 0) && !Utils.doubleEquals(this.c, 0)
+            && Utils.doubleEquals(this.b, 0) && Utils.doubleEquals(this.d, 0)
+            && Utils.doubleEquals(this.e, 0) && Utils.doubleEquals(this.f, 0)) {
             this.type = ConicSection.Types.lines;
             return;
         }
@@ -200,12 +254,13 @@ export default class ConicSection {
             return;
         }
 
-        if (this.a !== 0 && this.c === this.a) {
+        if (!Utils.doubleEquals(this.a, 0) && Utils.doubleEquals(this.c, this.a)) {
             this.type = ConicSection.Types.circle;
             return;
         }
 
-        if (this.a !== 0 && this.c !== 0 && this.c !== this.a) {
+        if (!Utils.doubleEquals(this.a, 0) && !Utils.doubleEquals(this.c, 0)
+            && !Utils.doubleEquals(this.a, this.c)) {
             this.type = ConicSection.Types.ellipse;
             return;
         }

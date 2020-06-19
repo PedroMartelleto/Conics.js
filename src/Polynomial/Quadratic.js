@@ -14,8 +14,12 @@ export default class Quadratic {
         this.c = c;
     }
 
+    discriminant() {
+        return this.b**2 - 4*this.a*this.c;
+    }
+
     roots() {
-        const delta = this.b**2 - 4*this.a*this.c;
+        const delta = this.discriminant();
 
         if (delta < 0) {
             return [ 'imaginary', 'imaginary' ];
