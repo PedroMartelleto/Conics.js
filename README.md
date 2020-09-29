@@ -1,4 +1,4 @@
-# simath.js
+# conics.js
 
 A tool to simplify and identify conics from their equations.
 
