@@ -1,6 +1,6 @@
 # simath.js
 
-A tool to help visualize and solve mathematical problems.
+A tool to simplify and identify conics from their equations.
 
 ## Getting Started
 
