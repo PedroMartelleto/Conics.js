@@ -1,6 +1,7 @@
 # conics.js
 
 A tool to simplify and identify conics from their equations. [Demo here](https://simath.web.app/).
+![conics](https://user-images.githubusercontent.com/35240934/128615734-fb8ede7f-3406-4891-a5c4-2ea72b98a6fc.PNG)
 
 ## Getting Started
 
